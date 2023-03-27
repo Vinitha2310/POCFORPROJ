@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ebaaa8d3-9108-4f55-b961-24a1a762c808" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="8bd85bad-d0c5-4049-a650-4459ce6c6be3" >
+		<db:mssql-connection host="localhost" port="1433" user="sa" password="Admin123" databaseName="Trainingproject" />
+	</db:config>
+	<flow name="deletedbFlow" doc:id="a6195c5e-0901-4a20-b136-e0d50cec81f3" >
+		<http:listener doc:name="Listener" doc:id="63a765dd-56be-4817-b848-16d728ba8946" config-ref="HTTP_Listener_config" path=" /deletedb/{emp_id}"/>
+		<foreach doc:name="For Each" doc:id="66a12643-db39-4ae2-8726-4624a41e03da" batchSize="2" collection="#[payload]">
+			<db:delete doc:name="Delete" doc:id="e896362e-68dc-404e-9f4f-228561a80a8c" config-ref="Database_Config">
+			<db:sql><![CDATA[delete from empdetails where No=:employee]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	employee:attributes.uriParams.No
+}]]]></db:input-parameters>
+		</db:delete>
+		</foreach>
+		<set-payload value="row is deleted" doc:name="Set Payload" doc:id="d4cca5f7-8a38-4468-a693-25fdb4ff6375" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a3abeff3-ffb1-45ee-85e9-ffb59cf8b739" type="DB:BAD_SQL_SYNTAX"/>
+		</error-handler>
+	</flow>
+</mule>
